@@ -19,4 +19,4 @@ Provide a repeatable starting point for adding a cloud user and granting only th
 - [Entra security groups](../screenshots/03-entra-security-groups.png)
 - [Role-change membership verification](../screenshots/04-entra-role-change-membership.png)
 
-This lab demonstrates the identity and group-management portions of the workflow. Production onboarding would also include approval, licensing, MFA, and ticket references.
+An operational onboarding process should also include approval, licensing, MFA, and ticket references.
