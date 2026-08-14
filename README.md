@@ -1,25 +1,55 @@
 # Azure Identity & Infrastructure Operations Lab
 
-Separate portfolio project for practicing Azure management operations while reusing the existing SOC lab resources. The lab will be documented incrementally as each phase is completed and validated.
+An incremental Azure operations lab built on an existing SOC environment. It demonstrates cloud identity administration, group-based access control, VM health validation, monitoring, alert response, and safe backup recovery.
 
-## Planned focus
+## What this demonstrates
 
-- Microsoft Entra ID users and security groups
-- Group-based Azure RBAC
-- VM operations and status checks
-- Azure Monitor and alerts
-- Azure Backup and recovery
-- PowerShell administration and automation
-- Infrastructure troubleshooting
+- Microsoft Entra cloud users and security groups
+- User lifecycle actions: membership changes, account disablement, and sign-in validation
+- Azure RBAC assigned to groups at resource-group and VM scopes
+- Effective-access testing for authorized and unauthorized users
+- Windows domain, DNS, and secure-channel validation inside Azure-hosted VMs
+- Azure Monitor metric review and fired-alert investigation
+- Azure Backup job review and file-level recovery validation
+- Evidence-driven documentation with repeatable operational checks
 
-## Existing lab context
+## Environment
 
-The project reuses the existing Azure environment: VNet `10.10.0.0/16`, subnet `10.10.1.0/24`, `DC-01` running Windows Server 2022 with AD DS, DNS, and Splunk, and `Client-01` joined to `SOC-LAB.LOCAL`.
+| Layer | Details |
+|---|---|
+| Azure network | Existing VNet `10.10.0.0/16`, subnet `10.10.1.0/24` |
+| Domain controller | `DC-01`, Windows Server 2022, AD DS, DNS, Splunk |
+| Client | `Client-01`, joined to `SOC-LAB.LOCAL` |
+| Cloud identity | Microsoft Entra ID users and cloud security groups |
+| Protection | Recovery Services vault `rsv-soc-lab-backup` |
 
-AD DS inside `DC-01` remains separate from Microsoft Entra ID unless synchronization is intentionally configured later.
+AD DS inside `DC-01` remains separate from Microsoft Entra ID. No synchronization was configured as part of this lab.
 
-## Status
+## Phase status
 
-Repository structure initialized. Detailed runbooks, scripts, incident reports, screenshots, and validation results will be added only after the corresponding lab work is completed.
+| Phase | Status | Evidence |
+|---|---|---|
+| Environment review | Completed | [Resource inventory](screenshots/01-azure-resource-inventory.png) |
+| Entra users and groups | Completed | [Users](screenshots/02-entra-cloud-users.png), [groups](screenshots/03-entra-security-groups.png) |
+| Lifecycle management | Completed | [Role membership](screenshots/04-entra-role-change-membership.png), [offboarding evidence](screenshots/05-entra-offboarded-account-disabled.png) |
+| Azure RBAC | Completed | [Scope assignments](screenshots/08-azure-rbac-group-scope-assignments.png), [effective access](screenshots/09-jordan-effective-rbac-access.png) |
+| VM and domain health | Completed | [Service health](screenshots/12-domain-controller-service-health.png), [DNS and trust](screenshots/13-client-dns-domain-trust-validation.png) |
+| Monitor and alerting | Completed | [CPU spike](screenshots/14-client-cpu-utilization-spike.png), [fired alert](screenshots/15-high-cpu-alert-fired.png) |
+| Backup and recovery | Completed | [Backup jobs](screenshots/11-azure-vm-backup-completed.png), [file recovery](screenshots/16-file-level-recovery-success.png) |
+| Automation and hidden incidents | Planned | Scripts and additional incident exercises will be added when completed. |
 
-See the [architecture diagram](architecture/architecture-diagram.png) for the planned management and infrastructure layers.
+## Architecture
+
+![Azure identity and infrastructure architecture](architecture/architecture-diagram.png)
+
+## Documentation
+
+- [Screenshot index](screenshots/README.md)
+- [Onboarding runbook](runbooks/onboarding.md)
+- [Offboarding runbook](runbooks/offboarding.md)
+- [VM operations runbook](runbooks/vm-operations.md)
+- [Backup and recovery runbook](runbooks/backup-recovery.md)
+- [Lessons learned](lessons-learned.md)
+- [Incident documentation](incidents/)
+
+The repository intentionally distinguishes completed evidence from planned work. Screenshots show what was actually validated; no production claims or secrets are included.
