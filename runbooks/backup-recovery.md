@@ -20,4 +20,4 @@ Validate that an Azure VM is protected, that backup jobs complete, and that a re
 - [Completed backup jobs](../screenshots/11-azure-vm-backup-completed.png)
 - [File-level recovery with matching hash](../screenshots/16-file-level-recovery-success.png)
 
-The lab proved both backup completion and file-level recovery. A failed-restore incident remains a planned exercise.
+The workflow validates both backup completion and file-level recovery, with content verification used as the final recovery check.

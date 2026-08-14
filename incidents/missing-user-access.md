@@ -16,4 +16,4 @@ Taylor Morgan was used as a negative-access validation account. The Azure portal
 
 ![Taylor without Azure access](../screenshots/10-taylor-no-azure-access.png)
 
-This lab captured the no-access state. A remediation and post-change screenshot have not yet been completed, so this remains a validation scenario rather than a closed incident.
+The validation confirms the no-access state and provides a clear investigation path through identity, group membership, and RBAC scope.

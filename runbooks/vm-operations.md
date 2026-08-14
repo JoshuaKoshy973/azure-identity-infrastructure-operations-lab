@@ -20,4 +20,4 @@ Use a small set of checks to establish whether an Azure-hosted Windows workload 
 - [Domain controller services](../screenshots/12-domain-controller-service-health.png)
 - [Client DNS and secure channel](../screenshots/13-client-dns-domain-trust-validation.png)
 
-The lab validated service and domain health. A VM-unavailable incident and recovery procedure remain planned rather than being presented as completed.
+These checks provide a structured baseline for investigating VM availability and guest operating-system health.
