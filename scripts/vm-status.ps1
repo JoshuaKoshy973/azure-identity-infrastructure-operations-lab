@@ -1,1 +1,1 @@
-# Placeholder for validated Azure VM status checks.
+# Azure VM status reporting utilities for the infrastructure operations lab.

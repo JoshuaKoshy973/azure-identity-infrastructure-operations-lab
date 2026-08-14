@@ -36,7 +36,6 @@ AD DS inside `DC-01` remains separate from Microsoft Entra ID. No synchronizatio
 | VM and domain health | Completed | [Service health](screenshots/12-domain-controller-service-health.png), [DNS and trust](screenshots/13-client-dns-domain-trust-validation.png) |
 | Monitor and alerting | Completed | [CPU spike](screenshots/14-client-cpu-utilization-spike.png), [fired alert](screenshots/15-high-cpu-alert-fired.png) |
 | Backup and recovery | Completed | [Backup jobs](screenshots/11-azure-vm-backup-completed.png), [file recovery](screenshots/16-file-level-recovery-success.png) |
-| Automation and hidden incidents | Planned | Scripts and additional incident exercises will be added when completed. |
 
 ## Architecture
 
@@ -52,4 +51,4 @@ AD DS inside `DC-01` remains separate from Microsoft Entra ID. No synchronizatio
 - [Lessons learned](lessons-learned.md)
 - [Incident documentation](incidents/)
 
-The repository intentionally distinguishes completed evidence from planned work. Screenshots show what was actually validated; no production claims or secrets are included.
+The project is organized around practical identity, access, operations, monitoring, and recovery workflows. Screenshots provide evidence for the key configuration and validation steps.

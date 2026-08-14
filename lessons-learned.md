@@ -9,4 +9,4 @@
 - A CPU metric spike becomes operationally useful when it is connected to an alert rule, affected resource, severity, and fired state.
 - A completed backup job is not the same as a proven restore. File existence, content, and hashes provided the recovery validation here.
 - Screenshots are most useful when each one proves a specific state or transition rather than merely showing a settings page.
-- Portfolio documentation should distinguish completed evidence, planned work, and controlled test scenarios.
+- Strong operational documentation connects each configuration change to a validation result and a user or service outcome.
