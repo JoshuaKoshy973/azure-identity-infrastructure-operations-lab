@@ -41,14 +41,56 @@ AD DS inside `DC-01` remains separate from Microsoft Entra ID. No synchronizatio
 
 ![Azure identity and infrastructure architecture](architecture/architecture-diagram.png)
 
+See the [architecture notes](architecture/architecture-notes.md) for the control-plane, guest-service, identity, network, and data-protection boundaries.
+
 ## Documentation
 
 - [Screenshot index](screenshots/README.md)
 - [Onboarding runbook](runbooks/onboarding.md)
 - [Offboarding runbook](runbooks/offboarding.md)
+- [Identity and RBAC runbook](runbooks/identity-and-rbac.md)
 - [VM operations runbook](runbooks/vm-operations.md)
+- [RDP and NSG troubleshooting](runbooks/rds-and-nsg-troubleshooting.md)
+- [DNS and domain-resource troubleshooting](runbooks/dns-and-domain-resource-troubleshooting.md)
+- [File-share permissions](runbooks/file-share-permissions.md)
 - [Backup and recovery runbook](runbooks/backup-recovery.md)
 - [Lessons learned](lessons-learned.md)
 - [Incident documentation](incidents/)
 
+## Incident library
+
+- [RDP unavailable because of an NSG rule](incidents/rdp-unavailable-nsg.md)
+- [Domain resources unavailable because of client DNS](incidents/client-dns-misconfiguration.md)
+- [User cannot manage resources because of missing RBAC](incidents/missing-rbac-access.md)
+- [VM lifecycle operation stuck in Deallocating](incidents/vm-deallocating.md)
+- [Offboarding access verification](incidents/incomplete-offboarding.md)
+- [Backup restore troubleshooting](incidents/backup-restore-failure.md)
+
+## Automation
+
+The [`scripts/`](scripts/) directory contains focused PowerShell utilities for VM inventory and lifecycle operations, RBAC reporting, and identity workflow validation. Read-only reporting commands are separated from state-changing actions, and lifecycle actions support PowerShell's `-WhatIf` safety pattern.
+
 The project is organized around practical identity, access, operations, monitoring, and recovery workflows. Screenshots provide evidence for the key configuration and validation steps.
+
+## Operating model
+
+The lab follows a service-operations workflow rather than treating each task as an isolated portal click:
+
+```text
+Reported symptom
+→ scope and business impact
+→ identity, network, guest OS, or Azure control-plane evidence
+→ smallest safe corrective action
+→ user or service validation
+→ documented root cause and follow-up
+```
+
+This separation is important because a user-facing symptom does not identify the failing layer. Azure RBAC, NSGs, Windows logon rights, SMB/NTFS permissions, DNS, and guest services each control different parts of the end-to-end experience.
+
+## Related Windows infrastructure work
+
+This project builds on the same Windows and Active Directory foundation documented in the related [printer-support lab](https://github.com/JoshuaKoshy973/soc-home-lab-active-directory-threat-detection/tree/main/printer-support-lab) and [file-permissions lab](https://github.com/JoshuaKoshy973/soc-home-lab-active-directory-threat-detection/tree/main/file-permissions-lab). Those projects cover print-server operations, SMB/NTFS access, least privilege, user-impact troubleshooting, and service-desk documentation.
+
+## Portfolio focus
+
+The strongest theme across the projects is layered troubleshooting: identify whether the issue is identity, authorization, network, Windows service, application, or data protection; then make the smallest change that restores the required business function.
