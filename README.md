@@ -1,6 +1,6 @@
 # Azure Identity & Infrastructure Operations Lab
 
-An incremental Azure operations lab built on an existing SOC environment. It demonstrates cloud identity administration, group-based access control, VM health validation, monitoring, alert response, and safe backup recovery.
+An incremental Azure operations lab built on an existing Windows environment. It demonstrates cloud identity administration, group-based access control, VM health validation, monitoring, alert response, and safe backup recovery.
 
 ## What this demonstrates
 
