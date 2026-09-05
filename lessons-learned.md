@@ -124,3 +124,19 @@ Screenshots are strongest when each one proves a meaningful state or transition.
 ## Final takeaway
 
 The central skill demonstrated across these projects is not memorizing a portal path or command. It is isolating the failing layer, protecting scope, choosing the least-privileged correction, validating the actual user or service outcome, and leaving behind documentation that another technician can use.
+
+## Extending the lab with Terraform and CI/CD
+
+The next logical step is to move from operating known Azure resources manually to managing their desired state through code. That transition should preserve the operational lessons already established here:
+
+```text
+existing resource boundary
+→ Terraform configuration
+→ reviewed plan
+→ authenticated pipeline
+→ controlled apply
+→ Azure validation
+→ documented evidence
+```
+
+The important lesson is that Infrastructure as Code is not just a way to create resources faster. It introduces a source-of-truth, review, state-management, identity, approval, and drift-detection problem. The existing identity, RBAC, networking, monitoring, backup, and troubleshooting work provides the context needed to make those Terraform and pipeline decisions responsibly.

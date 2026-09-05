@@ -27,3 +27,33 @@ The client and domain controller share the `10.10.1.0/24` subnet inside the `10.
 ## Data-protection boundary
 
 Azure Backup protects the VM through the Recovery Services vault. A completed backup job demonstrates protection activity; file-level recovery validation demonstrates that usable data can be recovered and verified.
+
+## Infrastructure-as-Code extension boundary
+
+The completed lab was built and operated through the Azure portal, PowerShell, and targeted validation commands. The next evolution will place the Azure resource definitions under Terraform management without rebuilding the existing environment unnecessarily.
+
+The intended control flow is:
+
+```text
+Terraform configuration in Git
+        ↓
+terraform plan and review
+        ↓
+authenticated CI/CD pipeline
+        ↓
+Azure resource changes
+        ↓
+post-apply validation and documentation
+```
+
+The extension should preserve the existing boundaries:
+
+- Microsoft Entra ID and Azure RBAC remain the identity and authorization layer.
+- The existing VNet, subnet, VMs, NSGs, monitoring, and Recovery Services vault remain the operational environment.
+- Terraform becomes the desired-state and change-review layer for infrastructure.
+- Remote state must be protected and shared safely; it must not be committed to Git.
+- Workload identity or another federated mechanism should be preferred over long-lived service-principal secrets.
+- Azure DevOps or GitHub-based pipelines should run validation and plan review before any apply step.
+- Approval gates should protect changes that affect shared networking, identity, VM availability, or backup.
+
+This creates a clear portfolio progression: first operate the environment manually and learn its boundaries, then codify those same boundaries and automate controlled changes.
