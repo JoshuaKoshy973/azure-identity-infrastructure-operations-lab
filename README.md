@@ -1,6 +1,6 @@
 # Azure Identity & Infrastructure Operations Lab
 
-An incremental Azure operations lab built on an existing Windows environment. It demonstrates cloud identity administration, group-based access control, VM health validation, monitoring, alert response, and safe backup recovery.
+An incremental Azure operations lab built on an existing SOC environment. It demonstrates cloud identity administration, group-based access control, VM health validation, monitoring, alert response, safe backup recovery, and the operational foundation for a future Infrastructure-as-Code extension.
 
 ## What this demonstrates
 
@@ -42,6 +42,24 @@ AD DS inside `DC-01` remains separate from Microsoft Entra ID. No synchronizatio
 ![Azure identity and infrastructure architecture](architecture/architecture-diagram.png)
 
 See the [architecture notes](architecture/architecture-notes.md) for the control-plane, guest-service, identity, network, and data-protection boundaries.
+
+## From manual operations to Infrastructure as Code
+
+This repository is intentionally evolving in stages:
+
+```text
+Manual Azure environment and guest operations
+        ↓
+Identity, RBAC, networking, monitoring, backup, and troubleshooting
+        ↓
+Terraform-managed infrastructure
+        ↓
+Remote state, workload identity, and CI/CD approvals
+        ↓
+Repeatable Azure operations and controlled change delivery
+```
+
+The current repository documents the first two layers with completed evidence. Terraform, remote state, Azure DevOps pipeline automation, approval gates, and Azure Virtual Desktop work will be added as they are implemented and validated. They will extend this lab’s existing environment and source-of-truth model rather than create a separate portfolio project.
 
 ## Documentation
 
@@ -94,3 +112,5 @@ This project builds on the same Windows and Active Directory foundation document
 ## Portfolio focus
 
 The strongest theme across the projects is layered troubleshooting: identify whether the issue is identity, authorization, network, Windows service, application, or data protection; then make the smallest change that restores the required business function.
+
+The next stage applies the same discipline to infrastructure changes: define the desired state in Terraform, review the plan, apply through an authenticated pipeline, validate the resulting Azure resources, and retain an auditable change history.
