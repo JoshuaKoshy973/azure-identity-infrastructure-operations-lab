@@ -45,3 +45,15 @@ variable "app_subnet_address_prefixes" {
   type        = list(string)
   default     = ["10.40.2.0/24"]
 }
+
+variable "operations_subnet_name" {
+  description = "Name of the operations subnet"
+  type        = string
+  default     = "subnet-azure-iac-operations"
+}
+
+variable "operations_subnet_address_prefixes" {
+  description = "Address prefixes for the operations subnet"
+  type        = list(string)
+  default     = ["10.40.3.0/24"]
+}
