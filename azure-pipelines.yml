@@ -43,10 +43,16 @@ steps:
     workingDirectory: $(terraformWorkingDirectory)
     displayName: 'Terraform Format Check'
 
-  - script: terraform init -backend=false
-    workingDirectory: $(terraformWorkingDirectory)
-    displayName: 'Terraform Init'
+  - task: AzureCLI@2
+    displayName: 'Terraform Init, Validate, and Plan'
+    inputs:
+      azureSubscription: 'sc-terraform-azure-iac-lab'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      workingDirectory: '$(terraformWorkingDirectory)'
+      inlineScript: |
+        export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
 
-  - script: terraform validate
-    workingDirectory: $(terraformWorkingDirectory)
-    displayName: 'Terraform Validate'
+        terraform init
+        terraform validate
+        terraform plan -input=false -no-color
