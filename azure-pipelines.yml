@@ -1,0 +1,35 @@
+trigger:
+  - main
+
+pr:
+  - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  terraformVersion: '1.16.0'
+  terraformWorkingDirectory: 'terraform'
+
+steps:
+  - checkout: self
+
+  - script: |
+      curl -fsSLo terraform.zip \
+        https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+      unzip -o terraform.zip
+      sudo mv terraform /usr/local/bin/terraform
+      terraform version
+    displayName: 'Install Terraform'
+
+  - script: terraform fmt -check -recursive
+    workingDirectory: $(terraformWorkingDirectory)
+    displayName: 'Terraform Format Check'
+
+  - script: terraform init -backend=false
+    workingDirectory: $(terraformWorkingDirectory)
+    displayName: 'Terraform Init'
+
+  - script: terraform validate
+    workingDirectory: $(terraformWorkingDirectory)
+    displayName: 'Terraform Validate'
