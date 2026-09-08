@@ -121,22 +121,106 @@ Symptom
 
 Screenshots are strongest when each one proves a meaningful state or transition. A clean ticket or runbook should allow another technician to understand what happened, why the change was made, how it was verified, and what should be checked next time.
 
-## Final takeaway
+## Terraform desired state and plan review
 
-The central skill demonstrated across these projects is not memorizing a portal path or command. It is isolating the failing layer, protecting scope, choosing the least-privileged correction, validating the actual user or service outcome, and leaving behind documentation that another technician can use.
+Terraform made the relationship between configuration, state, and live infrastructure concrete. A plan is not simply a preview to click through; it is the primary risk-review artifact for a proposed infrastructure change.
 
-## Extending the lab with Terraform and CI/CD
+The lab exercised four distinct plan behaviors:
 
-The next logical step is to move from operating known Azure resources manually to managing their desired state through code. That transition should preserve the operational lessons already established here:
+- **Create** — a new resource exists in HCL but not in state or Azure.
+- **Update in place** — an attribute can change without replacing the resource.
+- **Replace** — an immutable attribute requires Terraform to destroy and recreate the resource.
+- **Destroy** — a managed resource remains in state and Azure but is absent from the configuration.
+
+The `forces replacement` marker and the final add/change/destroy counts deserve deliberate review. A syntactically valid plan can still create an operationally unacceptable outage.
+
+## Drift detection and reconciliation
+
+Manually changing the resource-group tag demonstrated that Azure can diverge from the declared HCL even when no Git change occurred. Terraform detected the difference and proposed restoring the declared value.
 
 ```text
-existing resource boundary
-→ Terraform configuration
-→ reviewed plan
-→ authenticated pipeline
-→ controlled apply
-→ Azure validation
-→ documented evidence
+HCL desired state
+↔ remote Terraform state
+↔ observed Azure configuration
 ```
 
-The important lesson is that Infrastructure as Code is not just a way to create resources faster. It introduces a source-of-truth, review, state-management, identity, approval, and drift-detection problem. The existing identity, RBAC, networking, monitoring, backup, and troubleshooting work provides the context needed to make those Terraform and pipeline decisions responsibly.
+This reinforced why teams need a clear source of truth. If portal changes are allowed without being reflected in code, future plans may reverse them or combine them with unrelated changes.
+
+## Remote state and locking
+
+Local state was sufficient for the first learning step but not for a pipeline or shared workflow. Migrating to Azure Blob Storage created one authoritative state location and allowed Terraform to acquire a lock during operations.
+
+The migration also exposed an important Azure permission boundary: access to manage a storage account does not automatically grant access to the Blob data inside it. The `403` was resolved by granting `Storage Blob Data Contributor` at the state-container scope.
+
+State deserves the same care as other operational data. It can contain resource identifiers and sensitive attributes, so it should not be committed to Git or broadly accessible.
+
+## Workload identity and pipeline RBAC
+
+The Azure DevOps service connection used Workload Identity Federation rather than a stored client secret. This reduced secret-management risk and made the trust relationship explicit.
+
+The pipeline still required authorization in two places:
+
+- `Contributor` on `rg-azure-iac-lab` to manage the Terraform resources.
+- `Storage Blob Data Contributor` on the `tfstate` container to read, write, and lock remote state.
+
+The most useful mental model was:
+
+```text
+Authentication = who the pipeline is
+Authorization = what the pipeline can do
+Scope = where it can do it
+```
+
+## CI versus CD
+
+Pull-request CI and deployment CD serve different purposes. PR CI proves that the proposed HCL is formatted, valid, and capable of producing an authenticated plan. It deliberately stops before changing Azure.
+
+After merge, the main pipeline creates a fresh saved plan, publishes it as an artifact, waits for environment approval, and applies that exact plan. This preserves a relationship between reviewed source, planned actions, and deployed infrastructure.
+
+## Two independent approvals
+
+GitHub pull-request approval answers whether the code should enter `main`. The Azure DevOps environment approval answers whether the accepted infrastructure change should be deployed now.
+
+Separating these controls matters because code review and change timing are different decisions. A technically correct change may still need a maintenance window, an impact review, or a second operator’s approval before deployment.
+
+## End-to-end convergence
+
+The management-subnet change connected the entire workflow:
+
+```text
+local HCL change
+→ feature branch
+→ pull request
+→ automated CI plan
+→ review and merge
+→ saved main plan
+→ pipeline artifact
+→ protected approval
+→ Terraform apply
+→ Azure resource validation
+→ final no-change plan
+```
+
+A green apply job was necessary but not sufficient. The strongest completion test was confirming the resource in Azure and then receiving a no-change plan, showing that configuration, state, and the deployed environment agreed.
+
+## Terraform and pipeline troubleshooting
+
+Failures became easier to reason about when the workflow was split into layers:
+
+```text
+HCL formatting and syntax
+→ provider and backend initialization
+→ Azure authentication
+→ RBAC authorization and scope
+→ remote-state access and locking
+→ plan contents
+→ environment approval
+→ Azure apply
+→ post-deployment verification
+```
+
+The remote-state `403` was an authorization problem, not a Terraform syntax problem. An unexpected replacement plan would be a lifecycle and impact-review problem, not necessarily a provider failure. This prevents broad permission changes or repeated pipeline reruns from replacing diagnosis.
+
+## Final takeaway
+
+The project progressed from administering Azure resources manually to delivering infrastructure through a governed automation path. The central skill was not memorizing portal pages or Terraform commands; it was understanding boundaries, reviewing impact, applying least privilege, preserving a source of truth, and validating the actual result at every layer.
