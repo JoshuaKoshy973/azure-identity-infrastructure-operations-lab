@@ -36,3 +36,10 @@ resource "azurerm_subnet" "operations_subnet" {
   virtual_network_name = azurerm_virtual_network.iac_vnet.name
   address_prefixes     = var.operations_subnet_address_prefixes
 }
+
+resource "azurerm_subnet" "management_subnet" {
+  name                 = var.management_subnet_name
+  resource_group_name  = azurerm_resource_group.iac_rg.name
+  virtual_network_name = azurerm_virtual_network.iac_vnet.name
+  address_prefixes     = var.management_subnet_address_prefixes
+}

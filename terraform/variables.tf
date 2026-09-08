@@ -57,3 +57,15 @@ variable "operations_subnet_address_prefixes" {
   type        = list(string)
   default     = ["10.40.3.0/24"]
 }
+
+variable "management_subnet_name" {
+  description = "Name of the management subnet"
+  type        = string
+  default     = "subnet-azure-iac-management"
+}
+
+variable "management_subnet_address_prefixes" {
+  description = "Address prefixes for the management subnet"
+  type        = list(string)
+  default     = ["10.40.4.0/24"]
+}
