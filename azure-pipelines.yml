@@ -23,36 +23,172 @@ variables:
   terraformVersion: '1.16.0'
   terraformWorkingDirectory: 'terraform'
 
-steps:
-  - checkout: self
+stages:
 
-  - script: |
-      TEMP_DIR=$(mktemp -d)
+  # ---------------------------------------------------------
+  # STAGE 1: CI
+  # Runs only for pull requests targeting main.
+  # Validates and previews proposed Terraform changes.
+  # Does NOT deploy anything.
+  # ---------------------------------------------------------
+  - stage: CI
+    displayName: 'Terraform CI'
+    condition: eq(variables['Build.Reason'], 'PullRequest')
 
-      curl -fsSLo "$TEMP_DIR/terraform.zip" \
-        https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+    jobs:
+      - job: TerraformCI
+        displayName: 'Validate and Plan'
 
-      unzip -o "$TEMP_DIR/terraform.zip" -d "$TEMP_DIR"
+        steps:
+          - checkout: self
 
-      sudo install "$TEMP_DIR/terraform" /usr/local/bin/terraform
+          - script: |
+              TEMP_DIR=$(mktemp -d)
 
-      terraform version
-    displayName: 'Install Terraform'
+              curl -fsSLo "$TEMP_DIR/terraform.zip" \
+                https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
 
-  - script: terraform fmt -check -recursive
-    workingDirectory: $(terraformWorkingDirectory)
-    displayName: 'Terraform Format Check'
+              unzip -o "$TEMP_DIR/terraform.zip" -d "$TEMP_DIR"
 
-  - task: AzureCLI@2
-    displayName: 'Terraform Init, Validate, and Plan'
-    inputs:
-      azureSubscription: 'sc-terraform-azure-iac-lab'
-      scriptType: 'bash'
-      scriptLocation: 'inlineScript'
-      workingDirectory: '$(terraformWorkingDirectory)'
-      inlineScript: |
-        export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+              sudo install "$TEMP_DIR/terraform" /usr/local/bin/terraform
 
-        terraform init
-        terraform validate
-        terraform plan -input=false -no-color
+              terraform version
+            displayName: 'Install Terraform'
+
+          - script: terraform fmt -check -recursive
+            workingDirectory: $(terraformWorkingDirectory)
+            displayName: 'Terraform Format Check'
+
+          - task: AzureCLI@2
+            displayName: 'Terraform Init, Validate, and Plan'
+            inputs:
+              azureSubscription: 'sc-terraform-azure-iac-lab'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              workingDirectory: '$(terraformWorkingDirectory)'
+              inlineScript: |
+                export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                terraform init
+                terraform validate
+                terraform plan -input=false -no-color
+
+  # ---------------------------------------------------------
+  # STAGE 2: MAIN PLAN
+  # Runs only after approved code reaches main.
+  # Creates and saves the exact Terraform plan that could
+  # later be deployed.
+  # ---------------------------------------------------------
+  - stage: MainPlan
+    displayName: 'Terraform Main Plan'
+    dependsOn: []
+    condition: and(
+      eq(variables['Build.SourceBranch'], 'refs/heads/main'),
+      ne(variables['Build.Reason'], 'PullRequest')
+      )
+
+    jobs:
+      - job: TerraformPlan
+        displayName: 'Create Deployment Plan'
+
+        steps:
+          - checkout: self
+
+          - script: |
+              TEMP_DIR=$(mktemp -d)
+
+              curl -fsSLo "$TEMP_DIR/terraform.zip" \
+                https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+
+              unzip -o "$TEMP_DIR/terraform.zip" -d "$TEMP_DIR"
+
+              sudo install "$TEMP_DIR/terraform" /usr/local/bin/terraform
+
+              terraform version
+            displayName: 'Install Terraform'
+
+          - script: terraform fmt -check -recursive
+            workingDirectory: $(terraformWorkingDirectory)
+            displayName: 'Terraform Format Check'
+
+          - task: AzureCLI@2
+            displayName: 'Create Terraform Deployment Plan'
+            inputs:
+              azureSubscription: 'sc-terraform-azure-iac-lab'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              workingDirectory: '$(terraformWorkingDirectory)'
+              inlineScript: |
+                export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                terraform init
+                terraform validate
+
+                terraform plan \
+                  -input=false \
+                  -no-color \
+                  -out=tfplan
+
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Terraform Plan'
+            inputs:
+              targetPath: '$(terraformWorkingDirectory)/tfplan'
+              artifact: 'terraform-plan'
+
+  # ---------------------------------------------------------
+  # STAGE 3: DEPLOY
+  # Runs only on main after MainPlan succeeds.
+  # Uses the protected Azure DevOps environment.
+  # Azure DevOps pauses for human approval BEFORE apply.
+  # ---------------------------------------------------------
+  - stage: Deploy
+    displayName: 'Terraform Deployment'
+    dependsOn: MainPlan
+    condition: and(
+      succeeded(),
+      eq(variables['Build.SourceBranch'], 'refs/heads/main'),
+      ne(variables['Build.Reason'], 'PullRequest')
+      )
+
+    jobs:
+      - deployment: TerraformApply
+        displayName: 'Apply Terraform Plan'
+        environment: 'azure-iac-lab'
+
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - download: current
+                  artifact: terraform-plan
+
+                - script: |
+                    TEMP_DIR=$(mktemp -d)
+
+                    curl -fsSLo "$TEMP_DIR/terraform.zip" \
+                      https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+
+                    unzip -o "$TEMP_DIR/terraform.zip" -d "$TEMP_DIR"
+
+                    sudo install "$TEMP_DIR/terraform" /usr/local/bin/terraform
+
+                    terraform version
+                  displayName: 'Install Terraform'
+
+                - task: AzureCLI@2
+                  displayName: 'Terraform Apply'
+                  inputs:
+                    azureSubscription: 'sc-terraform-azure-iac-lab'
+                    scriptType: 'bash'
+                    scriptLocation: 'inlineScript'
+                    workingDirectory: '$(terraformWorkingDirectory)'
+                    inlineScript: |
+                      export ARM_SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+
+                      terraform init
+
+                      cp "$(Pipeline.Workspace)/terraform-plan/tfplan" ./tfplan
+
+                      terraform apply -input=false tfplan
